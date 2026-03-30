@@ -1,0 +1,23 @@
+package com.seoul.greenpath.domain.auth.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+/**
+ * 일반 회원가입 요청 DTO
+ */
+public record SignUpRequest(
+
+        @NotBlank(message = "이메일은 필수입니다.")
+        @Email(message = "이메일 형식이 올바르지 않습니다.")
+        String email,
+
+        @NotBlank(message = "비밀번호는 필수입니다.")
+        @Size(min = 8, max = 20, message = "비밀번호는 8~20자여야 합니다.")
+        String password,
+
+        @NotBlank(message = "이름은 필수입니다.")
+        @Size(min = 1, max = 20, message = "이름은 1~20자여야 합니다.")
+        String name
+) {}
