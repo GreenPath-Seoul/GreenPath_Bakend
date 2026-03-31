@@ -5,6 +5,7 @@ import com.seoul.greenpath.domain.auth.dto.ReissueRequest;
 import com.seoul.greenpath.domain.auth.dto.SignUpRequest;
 import com.seoul.greenpath.domain.auth.dto.TokenResponse;
 import com.seoul.greenpath.domain.auth.service.AuthService;
+import com.seoul.greenpath.global.common.ApiResponse;
 import com.seoul.greenpath.global.security.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -34,34 +35,44 @@ public class AuthController {
     private final AuthService authService;
 
     /**
+     * 이메일 중복 확인
+     */
+    @GetMapping("/check-email")
+    public ResponseEntity<ApiResponse<Void>> checkEmail(@RequestParam String email) {
+        authService.checkEmailDuplication(email);
+        return ResponseEntity.ok(ApiResponse.success("사용 가능한 이메일입니다.", null));
+    }
+
+    /**
      * 일반 회원가입
      */
     @PostMapping("/sign-up")
-    public ResponseEntity<Void> signUp(@Valid @RequestBody SignUpRequest request) {
-        authService.signUp(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<ApiResponse<Long>> signUp(@Valid @RequestBody SignUpRequest request) {
+        Long memberId = authService.signUp(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(HttpStatus.CREATED.value(), "회원가입이 완료되었습니다.", memberId));
     }
 
     /**
      * 일반 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
         TokenResponse tokenResponse = authService.login(request);
-        return ResponseEntity.ok(tokenResponse);
+        return ResponseEntity.ok(ApiResponse.success("로그인 성공", tokenResponse));
     }
 
     /**
      * Access Token 재발급 (Refresh Token Rotation)
      */
     @PostMapping("/reissue")
-    public ResponseEntity<TokenResponse> reissue(
+    public ResponseEntity<ApiResponse<TokenResponse>> reissue(
             @Valid @RequestBody ReissueRequest request,
             HttpServletRequest servletRequest
     ) {
         String clientIp = resolveClientIp(servletRequest);
         TokenResponse tokenResponse = authService.reissue(request, clientIp);
-        return ResponseEntity.ok(tokenResponse);
+        return ResponseEntity.ok(ApiResponse.success("토큰 재발급 성공", tokenResponse));
     }
 
     /**
@@ -69,11 +80,11 @@ public class AuthController {
      * 인증된 사용자만 호출 가능
      */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
+    public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         authService.logout(userDetails.getMemberId());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("로그아웃 되었습니다.", null));
     }
 
     // ── 내부 유틸 ─────────────────────────────────────────────

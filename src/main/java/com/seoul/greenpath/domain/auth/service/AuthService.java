@@ -9,11 +9,13 @@ import com.seoul.greenpath.domain.auth.repository.RefreshTokenRepository;
 import com.seoul.greenpath.domain.member.entity.Member;
 import com.seoul.greenpath.domain.member.entity.Role;
 import com.seoul.greenpath.domain.member.repository.MemberRepository;
+import com.seoul.greenpath.domain.member.event.MemberRegisteredEvent;
 import com.seoul.greenpath.global.exception.CustomException;
 import com.seoul.greenpath.global.exception.ErrorCode;
 import com.seoul.greenpath.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,11 +40,12 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ── 회원가입 ────────────────────────────────────────────────
 
     @Transactional
-    public void signUp(SignUpRequest request) {
+    public Long signUp(SignUpRequest request) {
         if (memberRepository.findByEmail(request.email()).isPresent()) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
@@ -55,8 +58,23 @@ public class AuthService {
                 .role(Role.USER)
                 .build();
 
-        memberRepository.save(member);
-        log.info("[SignUp] 새 회원 가입: email={}", request.email());
+        Member savedMember = memberRepository.save(member);
+        log.info("[SignUp] 새 회원 가입: email={}, memberId={}", request.email(), savedMember.getId());
+        
+        // 시니어 팁: 회원가입 후 이메일 발송 등 부가적인 로직은 이벤트로 위임하여 결합도를 낮춤
+        eventPublisher.publishEvent(new MemberRegisteredEvent(savedMember.getId(), savedMember.getEmail(), savedMember.getName()));
+        
+        return savedMember.getId();
+    }
+
+    /**
+     * 이메일 중복 확인
+     */
+    @Transactional(readOnly = true)
+    public void checkEmailDuplication(String email) {
+        if (memberRepository.findByEmail(email).isPresent()) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
     }
 
     // ── 로그인 ──────────────────────────────────────────────────
