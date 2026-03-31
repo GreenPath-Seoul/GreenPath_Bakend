@@ -23,20 +23,19 @@ spring:
         registration:
           # 카카오 설정 (https://developers.kakao.com 에서 앱 생성 후 발급)
           kakao:
-            client-id: ${KAKAO_CLIENT_ID:kakao-client-id-placeholder}
-            client-secret: ${KAKAO_CLIENT_SECRET:kakao-client-secret-placeholder}
+            client-id: ${KAKAO_CLIENT_ID:0aa8ea802538108605e5f35f87f2b971}
+            client-secret: ${KAKAO_CLIENT_SECRET:ZVyzY0pPl83Gaq9xk5g9jvdz4wgGn3Is}
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             scope:
               - profile_nickname
-              - account_email
             client-name: Kakao
 
           # 네이버 설정 (https://developers.naver.com 에서 앱 생성 후 발급)
           naver:
-            client-id: ${NAVER_CLIENT_ID:naver-client-id-placeholder}
-            client-secret: ${NAVER_CLIENT_SECRET:naver-client-secret-placeholder}
+            client-id: ${NAVER_CLIENT_ID:72UsVjkEvRHW3XabyH9J}
+            client-secret: ${NAVER_CLIENT_SECRET:9OlNWO4Nyp}
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             authorization-grant-type: authorization_code
             scope:
@@ -62,8 +61,8 @@ spring:
 # 개발용 키 — 실제 배포 시 환경변수(JWT_SECRET)로 교체 필수!
 jwt:
   secret: ${JWT_SECRET:ZGV2LWdyZWVucGF0aC1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2Yml0cw==}
-  access-token-validity-seconds: 1800       # 30분
-  refresh-token-validity-seconds: 1209600   # 14일
+  access-token-validity-seconds: 1800 # 30분
+  refresh-token-validity-seconds: 1209600 # 14일
 
 # ── 프론트엔드 URL ─────────────────────────────────────────────
 frontend:

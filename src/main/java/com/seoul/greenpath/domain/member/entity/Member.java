@@ -26,7 +26,7 @@ public class Member extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
 
     // JWT 기반 일반 로그인 사용자를 위한 비밀번호 (OAuth2 가입자는 null)
