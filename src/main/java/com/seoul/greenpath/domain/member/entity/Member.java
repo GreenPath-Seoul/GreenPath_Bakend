@@ -50,7 +50,34 @@ public class Member extends BaseTimeEntity {
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private MemberPreference preference;
 
+    // ── 보상 시스템용 누적 필드 ───────────────────────────
+    @Builder.Default
+    private Integer totalPoint = 0;
+
+    @Builder.Default
+    private Double totalDistance = 0.0;
+
+    @Builder.Default
+    private Double totalCo2 = 0.0;
+
+    @Builder.Default
+    private Integer visitedPlaceCount = 0;
+
+    @Builder.Default
+    private Integer completedCourseCount = 0;
+
     // ── 도메인 메서드 ─────────────────────────────────────────
+
+    /**
+     * 탐방 성과를 누적 업데이트합니다.
+     */
+    public void addStats(Integer point, Double distance, Double co2, Integer newPlaceCount) {
+        this.totalPoint += point;
+        this.totalDistance += distance;
+        this.totalCo2 += co2;
+        this.visitedPlaceCount += newPlaceCount;
+        this.completedCourseCount += 1;
+    }
 
     public void updateName(String name) {
         this.name = name;
