@@ -47,6 +47,9 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false)
     private Role role;
 
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private MemberPreference preference;
+
     // ── 도메인 메서드 ─────────────────────────────────────────
 
     public void updateName(String name) {
