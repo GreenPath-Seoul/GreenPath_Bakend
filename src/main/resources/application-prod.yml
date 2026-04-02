@@ -72,5 +72,5 @@ cors:
 logging:
   level:
     root: INFO
-    org.hibernate: INFO   # DEBUG에서 INFO로 변경하여 쿼리 로그 축소
+    org.hibernate: INFO # DEBUG에서 INFO로 변경하여 쿼리 로그 축소
     org.springframework.security: INFO # 보안 로그 축소

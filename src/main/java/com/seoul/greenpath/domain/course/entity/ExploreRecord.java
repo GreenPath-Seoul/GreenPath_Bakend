@@ -5,7 +5,7 @@ import com.seoul.greenpath.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * 사용자별 탐방 완료 기록 엔티티
@@ -29,8 +29,8 @@ public class ExploreRecord extends BaseTimeEntity {
     @JoinColumn(name = "course_id")
     private Course course;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private OffsetDateTime startTime;
+    private OffsetDateTime endTime;
 
     private Double distance;
     private Integer durationMinutes;

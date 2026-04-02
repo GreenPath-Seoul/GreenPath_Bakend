@@ -1,6 +1,6 @@
 package com.seoul.greenpath.domain.course.dto.request;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -8,8 +8,8 @@ import java.util.List;
  */
 public record CourseCompleteRequest(
     Long courseId,
-    LocalDateTime startTime,
-    LocalDateTime endTime,
+    OffsetDateTime startTime,
+    OffsetDateTime endTime,
     List<Long> visitedSpotIds,
     Double distance
 ) {}
