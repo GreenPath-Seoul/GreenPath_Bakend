@@ -12,12 +12,6 @@ spring:
       hibernate:
         format_sql: false
 
-logging:
-  level:
-    root: INFO
-    org.hibernate: INFO   # DEBUG에서 INFO로 변경하여 쿼리 로그 축소
-    org.springframework.security: INFO # 보안 로그 축소
-
   # ── OAuth2 소셜 로그인 설정 ──────────────────────────────────
   security:
     oauth2:
@@ -68,3 +62,9 @@ frontend:
 
 cors:
   allowed-origins: ${FRONTEND_URL}
+
+logging:
+  level:
+    root: INFO
+    org.hibernate: INFO   # DEBUG에서 INFO로 변경하여 쿼리 로그 축소
+    org.springframework.security: INFO # 보안 로그 축소
