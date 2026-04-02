@@ -1,5 +1,9 @@
 server:
-  forward-headers-strategy: framework
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      protocol-header: x-forwarded-proto
+      remote-ip-header: x-forwarded-for
 spring:
   datasource:
     url: ${DB_URL}
