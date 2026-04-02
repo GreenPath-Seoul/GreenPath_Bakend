@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: greenpath
+  profiles:
+    active: dev
+  output:
+    ansi:
+      enabled: DETECT
+logging:
+  level:
+    root: INFO
+    org.springframework: WARN
+    org.apache: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
