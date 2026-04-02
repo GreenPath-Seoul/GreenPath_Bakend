@@ -43,6 +43,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+        @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins}")
+        private List<String> allowedOrigins;
+
         private final JwtProvider jwtProvider;
         private final CustomUserDetailsService customUserDetailsService;
         private final CustomOAuth2UserService customOAuth2UserService;
@@ -129,7 +132,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOriginPatterns(List.of("http://localhost:3000", "https://*.greenpath.kr"));
+                config.setAllowedOriginPatterns(allowedOrigins);
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
                 config.setExposedHeaders(List.of("Authorization"));
