@@ -143,4 +143,12 @@ public class SecurityConfig {
                 source.registerCorsConfiguration("/**", config);
                 return source;
         }
+
+        /**
+         * HTTPS 리다이렉트 처리 필터 (로드밸런서/프록시 환경 대응)
+         */
+        @Bean
+        public org.springframework.web.filter.ForwardedHeaderFilter forwardedHeaderFilter() {
+                return new org.springframework.web.filter.ForwardedHeaderFilter();
+        }
 }
