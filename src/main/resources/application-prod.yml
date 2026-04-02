@@ -1,16 +1,22 @@
 spring:
   datasource:
     url: ${DB_URL}
-    driver-class-name: com.mysql.cj.jdbc.Driver  # 만약 RDS(MySQL)를 사용하신다면 변경 필요
+    driver-class-name: com.mysql.cj.jdbc.Driver # 만약 RDS(MySQL)를 사용하신다면 변경 필요
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: validate  # 운영 환경에서는 테이블 자동 생성이 아닌 검지만 수행
+      ddl-auto: update # 테이블이 없으면 생성, 있으면 수정 (운영 초기 단계에 유용)
     show-sql: false
     properties:
       hibernate:
         format_sql: false
+
+logging:
+  level:
+    root: INFO
+    org.hibernate: INFO   # DEBUG에서 INFO로 변경하여 쿼리 로그 축소
+    org.springframework.security: INFO # 보안 로그 축소
 
   # ── OAuth2 소셜 로그인 설정 ──────────────────────────────────
   security:
