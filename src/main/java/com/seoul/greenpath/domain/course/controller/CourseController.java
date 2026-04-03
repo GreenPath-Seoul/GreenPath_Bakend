@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 /**
  * 코스 추천 관련 컨트롤러
@@ -31,15 +32,23 @@ public class CourseController {
      */
     @Operation(summary = "맞춤 코스 추천", description = "분위기, 소요 시간, 난이도 등 유저 설정에 맞는 AI 추천 코스를 제안합니다.")
     @PostMapping("/recommend")
-    public ApiResponse<CourseResponse> recommend(@RequestBody(required = false) CourseRequest request) {
+    public ApiResponse<List<CourseResponse>> recommend(@RequestBody(required = false) CourseRequest request) {
         log.info("[CourseController] 코스 추천 요청 수신");
         
         // 향후 AI 분석 레이어 추가 예정
-        CourseResponse response = courseService.getRecommendCourse();
+        List<CourseResponse> response = courseService.getRecommendCourses();
         
         return ApiResponse.success("성공적으로 분석된 코스를 반환하였습니다.", response);
     }
+    @Operation(summary = "코스 상세 정보 조회", description = "선택한 코스에 대한 정보를 반환합니다.")
+    @GetMapping("/{courseId}")
+    public ApiResponse<CourseResponse> getCourseDetail(@PathVariable Long courseId) {
+        log.info("[CourseController] 코스 상세 조회 요청 수신");
 
+        CourseResponse response = courseService.getCourseById(courseId);
+
+        return ApiResponse.success("코스 정보를 성공적으로 조회했습니다.", response);
+    }
     /**
      * 탐방 중(실시간) 특정 경유지의 상세 정보(위치, 설명 등)를 조회합니다.
      */

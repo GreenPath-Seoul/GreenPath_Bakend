@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,31 +50,44 @@ public class CourseService {
      * AI 분석 기반 코스를 추천하고 이를 데이터베이스에 저장합니다.
      */
     @Transactional
-    public CourseResponse getRecommendCourse() {
-        log.info("[CourseService] 추천 코스 생성 및 저장 시작");
+    public List<CourseResponse> getRecommendCourses() {
+         log.info("[CourseService] 추천 코스 생성 및 저장 시작");
 
-        Place place1 = getOrCreatePlace("성북동 고택", "조선시대 양반가의 전통 한옥", 37.59, 127.01, "문화재", "https://picsum.photos/600/400");
-        Place place2 = getOrCreatePlace("종로 골목 문화재", "숨겨진 보물 같은 작은 사당", 37.57, 126.99, "문화재", "https://picsum.photos/600/400");
-        Place place3 = getOrCreatePlace("숨은 한옥 카페", "전통과 현대가 공존하는 휴식 공간", 37.58, 127.00, "카페", "https://picsum.photos/600/400");
+        List<CourseResponse> result = new ArrayList<>();
 
-        Course course = Course.builder()
-                .title("조용한 한옥 골목 힐링 라이딩")
-                .description("AI가 선별한 당신만의 코스")
-                .distanceKm(4.2)
-                .durationMinutes(90)
-                .difficulty(Level.EASY)
-                .carbonReductionKg(1.2)
-                .polyline("encoded_polyline_string")
-                .build();
+        for (int i = 0; i < 5; i++) {
 
-        course.addStop(CourseStop.builder().place(place1).stopOrder(1).stayMinutes(20).build());
-        course.addStop(CourseStop.builder().place(place2).stopOrder(2).stayMinutes(15).build());
-        course.addStop(CourseStop.builder().place(place3).stopOrder(3).stayMinutes(30).build());
+                Place place1 = getOrCreatePlace("성북동 고택", "조선시대 양반가의 전통 한옥", 37.59, 127.01, "문화재", "https://picsum.photos/600/400");
+                Place place2 = getOrCreatePlace("종로 골목 문화재", "숨겨진 보물 같은 작은 사당", 37.57, 126.99, "문화재", "https://picsum.photos/600/400");
+                Place place3 = getOrCreatePlace("숨은 한옥 카페", "전통과 현대가 공존하는 휴식 공간", 37.58, 127.00, "카페", "https://picsum.photos/600/400");
 
-        Course savedCourse = courseRepository.save(course);
-        return fromEntity(savedCourse);
-    }
+                Course course = Course.builder()
+                        .title("조용한 한옥 골목 힐링 라이딩 " + (i + 1))
+                        .description("AI 추천 코스 " + (i + 1))
+                        .distanceKm(4.2 + i) // 약간씩 다르게
+                        .durationMinutes(90)
+                        .difficulty(Level.EASY)
+                        .carbonReductionKg(1.2)
+                        .polyline("encoded_polyline_string")
+                        .build();
 
+                course.addStop(CourseStop.builder().place(place1).stopOrder(1).stayMinutes(20).build());
+                course.addStop(CourseStop.builder().place(place2).stopOrder(2).stayMinutes(15).build());
+                course.addStop(CourseStop.builder().place(place3).stopOrder(3).stayMinutes(30).build());
+
+                Course savedCourse = courseRepository.save(course);
+
+                result.add(fromEntity(savedCourse));
+        }
+
+                return result;
+        }
+        public CourseResponse getCourseById(Long courseId) {
+                Course course = courseRepository.findById(courseId)
+                        .orElseThrow(() -> new CustomException(ErrorCode.COURSE_NOT_FOUND));
+
+                return fromEntity(course);
+        }       
     /**
      * 탐방 완료 처리를 수행합니다.
      */
