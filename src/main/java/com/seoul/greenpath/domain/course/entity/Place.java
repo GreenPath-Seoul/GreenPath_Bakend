@@ -32,6 +32,12 @@ public class Place extends BaseTimeEntity {
     @Column(nullable = false)
     private Double longitude;
 
+    private String address;
+
+    private String closedDays; // 휴무일
+
+    private String operatingHours; // 운영시간
+
     private String imageUrl;
 
     private String category; // 문화재, 카페, 유적지 등
