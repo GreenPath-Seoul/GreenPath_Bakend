@@ -70,6 +70,7 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/auth/sign-up",
                                                                 "/api/auth/login",
+                                                                "/api/auth/check-email",
                                                                 "/api/auth/reissue",
                                                                 "/oauth2/**",
                                                                 "/login/oauth2/**",
