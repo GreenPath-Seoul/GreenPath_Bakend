@@ -62,6 +62,7 @@ public class CourseService {
                 Place place3 = getOrCreatePlace("숨은 한옥 카페", "전통과 현대가 공존하는 휴식 공간", 37.58, 127.00, "카페", "https://picsum.photos/600/400");
 
                 Course course = Course.builder()
+                        .code("COURSE_" + (i + 1))
                         .title("조용한 한옥 골목 힐링 라이딩 " + (i + 1))
                         .description("AI 추천 코스 " + (i + 1))
                         .distanceKm(4.2 + i) // 약간씩 다르게
@@ -71,9 +72,9 @@ public class CourseService {
                         .polyline("encoded_polyline_string")
                         .build();
 
-                course.addStop(CourseStop.builder().place(place1).stopOrder(1).stayMinutes(20).build());
-                course.addStop(CourseStop.builder().place(place2).stopOrder(2).stayMinutes(15).build());
-                course.addStop(CourseStop.builder().place(place3).stopOrder(3).stayMinutes(30).build());
+                course.addStop(CourseStop.builder().code("STOP_" + (i + 1) + "_1").place(place1).stopOrder(1).stayMinutes(20).build());
+                course.addStop(CourseStop.builder().code("STOP_" + (i + 1) + "_2").place(place2).stopOrder(2).stayMinutes(15).build());
+                course.addStop(CourseStop.builder().code("STOP_" + (i + 1) + "_3").place(place3).stopOrder(3).stayMinutes(30).build());
 
                 Course savedCourse = courseRepository.save(course);
 
@@ -144,7 +145,9 @@ public class CourseService {
         Place place = stop.getPlace();
         return new CourseExploreResponse(
                 stop.getId(),
+                stop.getCode(),
                 courseId,
+                stop.getCourse().getCode(),
                 place.getName(),
                 place.getDescription(),
                 place.getLatitude(),
@@ -170,6 +173,7 @@ public class CourseService {
     private CourseResponse fromEntity(Course course) {
         List<CourseResponse.CourseStop> stopDtos = course.getStops().stream()
                 .map(stop -> new CourseResponse.CourseStop(
+                        stop.getCode(),
                         stop.getStopOrder(),
                         stop.getPlace().getName(),
                         stop.getPlace().getDescription(),
@@ -182,6 +186,7 @@ public class CourseService {
 
         return new CourseResponse(
                 course.getId(),
+                course.getCode(),
                 course.getTitle(),
                 course.getDescription(),
                 new CourseResponse.CourseSummary(
