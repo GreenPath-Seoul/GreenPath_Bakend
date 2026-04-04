@@ -23,6 +23,8 @@ public class Place extends BaseTimeEntity {
 
     private String code;
 
+    private String summary;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

@@ -9,6 +9,7 @@ public record CourseExploreResponse(
     Long courseId,
     String courseCode,
     String name,
+    String summary,
     String description,
     Double latitude,
     Double longitude,

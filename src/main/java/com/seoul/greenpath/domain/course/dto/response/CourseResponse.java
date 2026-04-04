@@ -25,6 +25,7 @@ public record CourseResponse(
         String code,
         Integer order,
         String name,
+        String summary,
         String description,
         Integer stayMinutes,
         Double latitude,

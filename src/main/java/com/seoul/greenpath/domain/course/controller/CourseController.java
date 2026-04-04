@@ -35,8 +35,8 @@ public class CourseController {
     public ApiResponse<List<CourseResponse>> recommend(@RequestBody(required = false) CourseRequest request) {
         log.info("[CourseController] 코스 추천 요청 수신");
         
-        // 향후 AI 분석 레이어 추가 예정
-        List<CourseResponse> response = courseService.getRecommendCourses();
+        Long memberId = SecurityUtil.getCurrentMemberId();
+        List<CourseResponse> response = courseService.getRecommendCourses(memberId, request);
         
         return ApiResponse.success("성공적으로 분석된 코스를 반환하였습니다.", response);
     }

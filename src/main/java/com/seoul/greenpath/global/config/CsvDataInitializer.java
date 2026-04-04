@@ -65,6 +65,7 @@ public class CsvDataInitializer implements CommandLineRunner {
                         .address(row.get("address"))
                         .latitude(parseSafeDouble(row.get("latitude")))
                         .longitude(parseSafeDouble(row.get("longitude")))
+                        .summary(row.get("summary"))
                         .description(row.get("description"))
                         .closedDays(row.get("휴무일"))
                         .operatingHours(row.get("운영시간"))
