@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 public record CourseResponse(
     Long courseId,
+    String code,
     String title,
     String description,
     CourseSummary summary,
@@ -21,8 +22,10 @@ public record CourseResponse(
     ) {}
 
     public record CourseStop(
+        String code,
         Integer order,
         String name,
+        String summary,
         String description,
         Integer stayMinutes,
         Double latitude,

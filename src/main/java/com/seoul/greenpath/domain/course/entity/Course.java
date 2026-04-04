@@ -22,6 +22,8 @@ public class Course extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String code;
+
     @Column(nullable = false)
     private String title;
 
@@ -42,6 +44,11 @@ public class Course extends BaseTimeEntity {
     @Builder.Default
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CourseStop> stops = new ArrayList<>();
+
+    private double healingScore;
+    private double emotionalScore;
+    private double historicalScore;
+    private double trendyScore;     // 트렌디
 
     // ── 연관관계 편의 메서드 ─────────────────────────────────────────
     public void addStop(CourseStop stop) {

@@ -5,8 +5,11 @@ package com.seoul.greenpath.domain.course.dto.response;
  */
 public record CourseExploreResponse(
     Long id,
+    String code,
     Long courseId,
+    String courseCode,
     String name,
+    String summary,
     String description,
     Double latitude,
     Double longitude,

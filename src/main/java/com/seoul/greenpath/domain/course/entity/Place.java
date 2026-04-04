@@ -21,6 +21,10 @@ public class Place extends BaseTimeEntity {
     @Column(nullable = false)
     private String name;
 
+    private String code;
+
+    private String summary;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -29,6 +33,12 @@ public class Place extends BaseTimeEntity {
 
     @Column(nullable = false)
     private Double longitude;
+
+    private String address;
+
+    private String closedDays; // 휴무일
+
+    private String operatingHours; // 운영시간
 
     private String imageUrl;
 
