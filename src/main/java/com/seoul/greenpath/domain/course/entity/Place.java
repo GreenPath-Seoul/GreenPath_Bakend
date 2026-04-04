@@ -21,6 +21,8 @@ public class Place extends BaseTimeEntity {
     @Column(nullable = false)
     private String name;
 
+    private String code;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
