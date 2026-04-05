@@ -116,8 +116,7 @@ public class CsvDataInitializer implements CommandLineRunner {
                         .distanceKm(distanceKm)
                         .durationMinutes(parseSafeInt(row.get("durationMinutes")))
                         .difficulty(level)
-                        .carbonReductionKg(distanceKm != null ? distanceKm * 0.2 : 0.0)
-
+                        .carbonReductionKg(distanceKm != null ? Math.round(distanceKm * 0.2 * 10) / 10.0 : 0.0)
                         // 🔥 핵심 추가
                         .healingScore(healingScore)
                         .emotionalScore(emotionalScore)

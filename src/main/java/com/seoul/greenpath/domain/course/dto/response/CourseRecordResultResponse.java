@@ -5,6 +5,7 @@ package com.seoul.greenpath.domain.course.dto.response;
  */
 public record CourseRecordResultResponse(
     Long recordId,
+    String courseTitle,
     Summary summary,
     CO2 co2,
     Reward reward,
