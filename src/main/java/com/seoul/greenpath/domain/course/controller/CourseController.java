@@ -75,4 +75,16 @@ public class CourseController {
         CourseRecordResultResponse result = courseService.completeExploration(memberId, request);
         return ApiResponse.success("탐방 결과가 기록되고 보상이 지급되었습니다.", result);
     }
+
+    /**
+     * 특정 탐방 기록의 상세 결과를 조회합니다.
+     */
+    @Operation(summary = "탐방 기록 상세 조회", description = "기록 ID를 통해 과거 탐방 결과를 다시 조회합니다.")
+    @GetMapping("/records/{recordId}")
+    public ApiResponse<CourseRecordResultResponse> getExploreRecordResult(@PathVariable Long recordId) {
+        log.info("[CourseController] 탐방 기록 상세 조회 요청 수신 - Record: {}", recordId);
+        Long memberId = SecurityUtil.getCurrentMemberId();
+        CourseRecordResultResponse result = courseService.getExploreRecordResult(memberId, recordId);
+        return ApiResponse.success("탐방 기록을 성공적으로 조회하였습니다.", result);
+    }
 }

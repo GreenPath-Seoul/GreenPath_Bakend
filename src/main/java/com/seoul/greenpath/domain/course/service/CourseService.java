@@ -267,6 +267,7 @@ public class CourseService {
 
                 return new CourseRecordResultResponse(
                                 record.getId(),
+                                course.getTitle(),
                                 new CourseRecordResultResponse.Summary(distance, (int) durationMinutes, visitedCount),
                                 new CourseRecordResultResponse.CO2(co2Amount, treeEquivalent),
                                 new CourseRecordResultResponse.Reward(basePoint, bonusPoint, totalPoint),
@@ -274,6 +275,42 @@ public class CourseService {
                                                 ? new CourseRecordResultResponse.BadgeInfo(lastBadge.getCode(),
                                                                 lastBadge.getName())
                                                 : null);
+        }
+
+        /**
+         * 특정 탐방 기록의 상세 결과를 조회합니다.
+         */
+        public CourseRecordResultResponse getExploreRecordResult(Long memberId, Long recordId) {
+                log.info("[CourseService] 탐방 기록 상세 조회 시작 - Member: {}, Record: {}", memberId, recordId);
+
+                ExploreRecord record = exploreRecordRepository.findById(recordId)
+                                .orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
+
+                // 본인의 기록인지 확인
+                if (!record.getMember().getId().equals(memberId)) {
+                        throw new CustomException(ErrorCode.FORBIDDEN);
+                }
+
+                // 원본 데이터를 바탕으로 DTO 구성
+                double distance = record.getDistance();
+                int visitedCount = record.getVisitedCount();
+                int durationMinutes = record.getDurationMinutes();
+                double co2Amount = record.getCo2Amount();
+                double treeEquivalent = co2Amount / 4.7;
+
+                // 포인트 역계산 (필요 시) - 현재는 단순 계산 방식
+                int basePoint = (int) (distance * 10) + (visitedCount * 10);
+                int totalPoint = record.getTotalPoint();
+                int bonusPoint = totalPoint - basePoint;
+
+                return new CourseRecordResultResponse(
+                                record.getId(),
+                                record.getCourse().getTitle(),
+                                new CourseRecordResultResponse.Summary(distance, durationMinutes, visitedCount),
+                                new CourseRecordResultResponse.CO2(co2Amount, treeEquivalent),
+                                new CourseRecordResultResponse.Reward(basePoint, bonusPoint, totalPoint),
+                                null // 과거 기록 조회 시 배지 획득 여부는 일단 null (이미 획득했을 것이므로)
+                );
         }
 
         public CourseExploreResponse getCourseStopInfo(Long courseId, Integer stopOrder) {
