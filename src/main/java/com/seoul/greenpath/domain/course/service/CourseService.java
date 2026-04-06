@@ -18,6 +18,7 @@ import com.seoul.greenpath.domain.member.repository.MemberRepository;
 import com.seoul.greenpath.domain.member.service.RewardService;
 import com.seoul.greenpath.global.exception.CustomException;
 import com.seoul.greenpath.global.exception.ErrorCode;
+import com.seoul.greenpath.global.openai.OpenAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,7 @@ public class CourseService {
         private final MemberRepository memberRepository;
         private final MemberPreferenceRepository memberPreferenceRepository;
         private final RewardService rewardService;
+        private final OpenAiService openAiService;
 
         /**
          * AI 분석 기반 코스를 추천하고 이를 데이터베이스에 저장합니다.
@@ -115,13 +117,25 @@ public class CourseService {
                 MemberPreference preference = memberPreferenceRepository.findByMemberId(memberId)
                                 .orElseGet(() -> MemberPreference.builder().member(member).build());
 
+                String preferenceText = request.preferenceText();
+                float[] embedding = null;
+                if (preferenceText != null && !preferenceText.trim().isEmpty()) {
+                        // 텍스트가 변경된 경우에만 임베딩 생성 (또는 항상 생성)
+                        if (!preferenceText.equals(preference.getPreferenceText())) {
+                                log.info("[CourseService] 사용자 취향 임베딩 생성 시작 - Member: {}", memberId);
+                                embedding = openAiService.getEmbedding(preferenceText);
+                        }
+                }
+
                 preference.update(
                                 request.mood(),
                                 request.duration(),
                                 request.level(),
                                 request.location(),
                                 request.latitude(),
-                                request.longitude());
+                                request.longitude(),
+                                preferenceText,
+                                embedding);
 
                 return memberPreferenceRepository.save(preference);
         }
@@ -129,7 +143,7 @@ public class CourseService {
         private double calculateScore(Course course, CourseRequest request, MemberPreference preference) {
                 double score = 0.0;
 
-                // 1. 분위기 (Mood) 가중치
+                // 1. 분위기 (Mood) 가중치 (기존 가중치 사용)
                 com.seoul.greenpath.domain.member.entity.Mood targetMood = (request != null && request.mood() != null)
                                 ? request.mood()
                                 : (preference != null ? preference.getMood() : null);
@@ -143,7 +157,7 @@ public class CourseService {
                         };
                 }
 
-                // 2. 소요 시간 (Duration) 매칭 (가중치 10점 - 중요도 상향)
+                // 2. 소요 시간 (Duration) 매칭 (가중치 10점)
                 com.seoul.greenpath.domain.member.entity.Duration targetDuration = (request != null
                                 && request.duration() != null) ? request.duration()
                                                 : (preference != null ? preference.getDuration() : null);
@@ -171,13 +185,41 @@ public class CourseService {
                         }
                 }
 
-                // 4. 평소 선호 스타일 보너스 (저장된 선호도와 일치하는 코스 부각)
+                // 4. 평소 선호 스타일 보너스
                 if (preference != null && preference.getMood() != null) {
                         if (matchesMood(course, preference.getMood()))
                                 score += 3.0;
                 }
 
+                // 5. 🔥 임베딩 유사도 가중치 (추가)
+                // 현재 요청의 preferenceText에 대한 임베딩이 있거나, 저장된 preference의 임베딩이 있는 경우
+                float[] userEmbedding = (preference != null) ? preference.getEmbedding() : null;
+                float[] courseEmbedding = course.getEmbedding();
+
+                if (userEmbedding != null && courseEmbedding != null) {
+                        double similarity = cosineSimilarity(userEmbedding, courseEmbedding);
+                        // 유사도는 -1 ~ 1 사이이나 대부분 0 ~ 1 사이로 나타남. 가중치 15점 부여.
+                        score += similarity * 15.0;
+                        log.debug("[CourseService] 코스: {}, 유사도: {}, 추가 점수: {}", course.getTitle(), similarity, similarity * 15.0);
+                }
+
                 return score;
+        }
+
+        private double cosineSimilarity(float[] vectorA, float[] vectorB) {
+                if (vectorA == null || vectorB == null || vectorA.length != vectorB.length) {
+                        return 0.0;
+                }
+                double dotProduct = 0.0;
+                double normA = 0.0;
+                double normB = 0.0;
+                for (int i = 0; i < vectorA.length; i++) {
+                        dotProduct += vectorA[i] * vectorB[i];
+                        normA += Math.pow(vectorA[i], 2);
+                        normB += Math.pow(vectorB[i], 2);
+                }
+                if (normA == 0 || normB == 0) return 0.0;
+                return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
         }
 
         private boolean matchesMood(Course course, com.seoul.greenpath.domain.member.entity.Mood mood) {

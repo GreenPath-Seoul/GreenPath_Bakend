@@ -7,6 +7,7 @@ import com.seoul.greenpath.domain.member.repository.MemberPreferenceRepository;
 import com.seoul.greenpath.domain.member.repository.MemberRepository;
 import com.seoul.greenpath.global.exception.CustomException;
 import com.seoul.greenpath.global.exception.ErrorCode;
+import com.seoul.greenpath.global.openai.OpenAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class MemberPreferenceService {
 
     private final MemberPreferenceRepository memberPreferenceRepository;
     private final MemberRepository memberRepository;
+    private final OpenAiService openAiService;
 
     /**
      * 사용자의 취향(선호도) 정보를 저장하거나 업데이트합니다.
@@ -42,13 +44,24 @@ public class MemberPreferenceService {
                     );
                 });
 
+        String preferenceText = request.preferenceText();
+        float[] embedding = null;
+        if (preferenceText != null && !preferenceText.trim().isEmpty()) {
+            if (!preferenceText.equals(preference.getPreferenceText())) {
+                log.info("[MemberPreferenceService] 사용자 취향 임베딩 생성 시작 - Member ID: {}", memberId);
+                embedding = openAiService.getEmbedding(preferenceText);
+            }
+        }
+
         preference.update(
                 request.mood(),
                 request.duration(),
                 request.level(),
                 request.location(),
                 request.latitude(),
-                request.longitude()
+                request.longitude(),
+                preferenceText,
+                embedding
         );
         
         log.info("[MemberPreferenceService] 취향 업데이트 성공 - Member ID: {}", memberId);

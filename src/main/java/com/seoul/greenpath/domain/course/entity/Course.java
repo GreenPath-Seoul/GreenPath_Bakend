@@ -50,6 +50,13 @@ public class Course extends BaseTimeEntity {
     private double historicalScore;
     private double trendyScore;     // 트렌디
 
+    @Column(columnDefinition = "TEXT")
+    private String embeddingText;
+
+    // H2(로컬)와 PostgreSQL(운영) 호환을 위해 columnDefinition 제거
+    // 운영 환경(PostgreSQL)에서는 dialect 등을 통해 vector 타입으로 매핑되도록 처리 가능합니다.
+    private float[] embedding;
+
     // ── 연관관계 편의 메서드 ─────────────────────────────────────────
     public void addStop(CourseStop stop) {
         this.stops.add(stop);
