@@ -3,7 +3,8 @@ package com.seoul.greenpath.global.config;
 import com.seoul.greenpath.domain.member.entity.Badge;
 import com.seoul.greenpath.domain.member.repository.BadgeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -14,13 +15,13 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-@Order(1) // CsvDataInitializer 이전에 실행 (순서 명시)
-public class DataInitializer implements CommandLineRunner {
+public class DataInitializer {
 
     private final BadgeRepository badgeRepository;
 
-    @Override
-    public void run(String... args) {
+    @EventListener(ApplicationReadyEvent.class)
+    @Order(1)
+    public void initData() {
         if (badgeRepository.count() > 0) return;
 
         List<Badge> defaultBadges = List.of(

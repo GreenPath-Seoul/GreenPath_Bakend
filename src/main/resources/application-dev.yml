@@ -70,3 +70,8 @@ frontend:
 
 cors:
   allowed-origins: http://localhost:3000
+
+# ── OpenAI 설정 ────────────────────────────────────────────────
+openai:
+  api-key: ${OPENAI_API_KEY:your_api_key_here}
+  embedding-model: text-embedding-3-small
