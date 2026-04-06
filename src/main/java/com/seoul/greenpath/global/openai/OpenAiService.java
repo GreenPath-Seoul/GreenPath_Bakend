@@ -43,6 +43,7 @@ public class OpenAiService {
 
         try {
             Map<String, Object> response = restTemplate.postForObject(url, request, Map.class);
+            log.info("🔥 OpenAI raw response: {}", response);
             if (response != null && response.containsKey("data")) {
                 List<Map<String, Object>> data = (List<Map<String, Object>>) response.get("data");
                 if (!data.isEmpty()) {
