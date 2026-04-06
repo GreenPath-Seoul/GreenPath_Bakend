@@ -10,36 +10,33 @@ import com.seoul.greenpath.domain.course.repository.CourseRepository;
 import com.seoul.greenpath.domain.course.repository.CourseStopRepository;
 import com.seoul.greenpath.domain.course.repository.PlaceRepository;
 import com.seoul.greenpath.domain.member.entity.Level;
+import com.seoul.greenpath.global.openai.OpenAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Order(2) // DataInitializer(뱃지) 다음으로 실행
-public class CsvDataInitializer implements CommandLineRunner {
+public class CsvDataInitializer {
 
     private final PlaceRepository placeRepository;
     private final CourseRepository courseRepository;
     private final CourseStopRepository courseStopRepository;
+    private final OpenAiService openAiService;
 
-    @Override
+    @EventListener(ApplicationReadyEvent.class)
+    @Order(2)
     @Transactional
-    public void run(String... args) throws Exception {
-        if (placeRepository.count() > 0) {
-            log.info("Data already exists. Skipping CSV import.");
-            return;
-        }
-
+    public void initCsvData() throws Exception {
         importPlaces();
         importCourses();
         importCourseStops();
@@ -59,8 +56,14 @@ public class CsvDataInitializer implements CommandLineRunner {
 
             while (it.hasNext()) {
                 Map<String, String> row = it.next();
+                String code = row.get("code");
+                
+                if (placeRepository.findByCode(code).isPresent()) {
+                    continue; // Skip if already exists
+                }
+
                 Place place = Place.builder()
-                        .code(row.get("code"))
+                        .code(code)
                         .name(row.get("name"))
                         .address(row.get("address"))
                         .latitude(parseSafeDouble(row.get("latitude")))
@@ -91,6 +94,11 @@ public class CsvDataInitializer implements CommandLineRunner {
 
             while (it.hasNext()) {
                 Map<String, String> row = it.next();
+                String code = row.get("code");
+
+                if (courseRepository.findByCode(code).isPresent()) {
+                    continue; // Skip if already exists
+                }
 
                 // ✅ difficulty 변환
                 String difficultyStr = row.get("difficulty");
@@ -109,8 +117,15 @@ public class CsvDataInitializer implements CommandLineRunner {
                 double historicalScore = parseSafeDouble(row.get("historicalScore"));
                 double trendyScore = parseSafeDouble(row.get("trendyScore"));
 
+                String embeddingText = row.get("embedding_text");
+                float[] embedding = null;
+                if (embeddingText != null && !embeddingText.trim().isEmpty()) {
+                    log.info("Generating embedding for course: {}", code);
+                    embedding = openAiService.getEmbedding(embeddingText);
+                }
+
                 Course course = Course.builder()
-                        .code(row.get("code"))
+                        .code(code)
                         .title(row.get("title"))
                         .description(row.get("description"))
                         .distanceKm(distanceKm)
@@ -122,7 +137,8 @@ public class CsvDataInitializer implements CommandLineRunner {
                         .emotionalScore(emotionalScore)
                         .historicalScore(historicalScore)
                         .trendyScore(trendyScore)
-
+                        .embeddingText(embeddingText)
+                        .embedding(embedding)
                         .build();
 
                 courseRepository.save(course);
@@ -145,16 +161,25 @@ public class CsvDataInitializer implements CommandLineRunner {
             while (it.hasNext()) {
                 Map<String, String> row = it.next();
                 
-                Course course = courseRepository.findByCode(row.get("CourseCode"))
-                        .orElseThrow(() -> new RuntimeException("Course not found: " + row.get("CourseCode")));
+                String courseCode = row.get("CourseCode");
+                String placeCode = row.get("PlaceCode");
+                int stopOrder = parseSafeInt(row.get("stopOrder"));
+
+                // Course와 stopOrder로 중복 체크
+                if (courseStopRepository.existsByCourseCodeAndStopOrder(courseCode, stopOrder)) {
+                    continue;
+                }
                 
-                Place place = placeRepository.findByCode(row.get("PlaceCode"))
-                        .orElseThrow(() -> new RuntimeException("Place not found: " + row.get("PlaceCode")));
+                Course course = courseRepository.findByCode(courseCode)
+                        .orElseThrow(() -> new RuntimeException("Course not found: " + courseCode));
+                
+                Place place = placeRepository.findByCode(placeCode)
+                        .orElseThrow(() -> new RuntimeException("Place not found: " + placeCode));
                 
                 CourseStop stop = CourseStop.builder()
                         .course(course)
                         .place(place)
-                        .stopOrder(parseSafeInt(row.get("stopOrder")))
+                        .stopOrder(stopOrder)
                         .stayMinutes(parseSafeInt(row.get("stayMinutes")))
                         .build();
                 

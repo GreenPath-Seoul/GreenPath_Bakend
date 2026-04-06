@@ -14,5 +14,6 @@ public record CourseRequest(
     Level level,
     Location location,
     Double latitude,
-    Double longitude
+    Double longitude,
+    String preferenceText
 ) {}

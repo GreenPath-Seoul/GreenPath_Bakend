@@ -69,6 +69,11 @@ frontend:
 cors:
   allowed-origins: ${FRONTEND_URL}
 
+# ── OpenAI 설정 ────────────────────────────────────────────────
+openai:
+  api-key: ${OPENAI_API_KEY}
+  embedding-model: text-embedding-3-small
+
 logging:
   level:
     root: INFO
