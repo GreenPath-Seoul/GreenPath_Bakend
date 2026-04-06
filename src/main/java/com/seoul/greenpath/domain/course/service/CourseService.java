@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -63,8 +64,21 @@ public class CourseService {
                 if (allCourses.isEmpty())
                         return new ArrayList<>();
 
+                // 탐방 완료된 코스 ID 목록 조회 및 필터링
+                Set<Long> completedIds = exploreRecordRepository.findCompletedCourseIdsByMemberId(memberId);
+                log.info("[CourseService] 제외할 탐방 완료 코스 수 - Count: {}", completedIds.size());
+
+                List<Course> availableCourses = allCourses.stream()
+                                .filter(course -> !completedIds.contains(course.getId()))
+                                .collect(Collectors.toList());
+
+                if (availableCourses.isEmpty()) {
+                        log.warn("[CourseService] 모든 코스를 탐방하여 새 추천이 불가능함. 기존 전체 코스 사용");
+                        availableCourses = allCourses; // 모든 코스를 마친 경우 전체에서 다시 추천
+                }
+
                 // 1. 점수 계산 및 거리 계산
-                List<ScoredCourse> scoredCourses = allCourses.stream()
+                List<ScoredCourse> scoredCourses = availableCourses.stream()
                                 .map(course -> {
                                         double score = calculateScore(course, request, preference);
                                         double distance = calculateDistanceToFirstStop(course,
