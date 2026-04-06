@@ -12,7 +12,7 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: create # 시작 시 기존 테이블 삭제 후 재생성 (초기 데이터 재설정용)
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
