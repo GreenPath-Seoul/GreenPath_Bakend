@@ -43,4 +43,8 @@ public class Place extends BaseTimeEntity {
     private String imageUrl;
 
     private String category; // 문화재, 카페, 유적지 등
+    
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }
