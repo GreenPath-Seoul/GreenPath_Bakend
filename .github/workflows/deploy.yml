@@ -72,6 +72,7 @@ jobs:
               -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
               -e FRONTEND_URL='${{ secrets.FRONTEND_URL }}' \
               -e OPENAI_API_KEY='${{ secrets.OPENAI_API_KEY }}' \
+              -e KMA_SERVICE_KEY='${{ secrets.KMA_SERVICE_KEY }}' \
               ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
 
             # 사용하지 않는 이미지 삭제 (선택사항)
