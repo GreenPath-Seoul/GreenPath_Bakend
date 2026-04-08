@@ -415,4 +415,21 @@ public class CourseService {
                                 course.getPolyline(),
                                 course.getCreatedAt());
         }
+    /**
+     * C0001 ~ C0010 중 랜덤으로 3개의 코스를 반환합니다.
+     */
+    public List<CourseResponse> getRandomCourses() {
+        log.info("[CourseService] 랜덤 코스 조회 요청 (C0001~C0010)");
+        List<String> codes = java.util.stream.IntStream.rangeClosed(1, 10)
+                .mapToObj(i -> String.format("C%04d", i))
+                .collect(Collectors.toList());
+
+        List<Course> courses = courseRepository.findAllByCodeIn(codes);
+        java.util.Collections.shuffle(courses);
+
+        return courses.stream()
+                .limit(3)
+                .map(this::fromEntity)
+                .collect(Collectors.toList());
+    }
 }

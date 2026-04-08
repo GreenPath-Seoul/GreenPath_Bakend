@@ -87,4 +87,15 @@ public class CourseController {
         CourseRecordResultResponse result = courseService.getExploreRecordResult(memberId, recordId);
         return ApiResponse.success("탐방 기록을 성공적으로 조회하였습니다.", result);
     }
+
+    /**
+     * 홈 화면을 위한 랜덤 3개 코스를 조회합니다. (C0001~C0010 중)
+     */
+    @Operation(summary = "랜덤 코스 조회", description = "홈 화면용으로 C0001~C0010 중 랜덤으로 3개의 코스를 반환합니다.")
+    @GetMapping("/random")
+    public ApiResponse<List<CourseResponse>> getRandomCourses() {
+        log.info("[CourseController] 랜덤 코스 조회 요청 수신");
+        List<CourseResponse> response = courseService.getRandomCourses();
+        return ApiResponse.success("성공적으로 랜덤 코스를 조회하였습니다.", response);
+    }
 }

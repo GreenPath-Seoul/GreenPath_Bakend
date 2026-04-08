@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -22,11 +23,25 @@ public class OpenAiService {
     @Value("${openai.embedding-model}")
     private String embeddingModel;
 
+    @Value("${openai.mock:false}")
+    private boolean mockOpenAi;
+
+    private final Random random = new Random();
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public float[] getEmbedding(String text) {
         if (text == null || text.trim().isEmpty()) {
             return new float[1536];
+        }
+
+        if (mockOpenAi) {
+            log.info("🔥 OpenAI Mocking activated. Generating random embedding.");
+            float[] result = new float[1536];
+            for (int i = 0; i < 1536; i++) {
+                result[i] = random.nextFloat() * 2 - 1; // -1 to 1 random values
+            }
+            return result;
         }
 
         String url = "https://api.openai.com/v1/embeddings";
