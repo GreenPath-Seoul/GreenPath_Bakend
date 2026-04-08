@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -58,8 +59,15 @@ public class CsvDataInitializer {
                 Map<String, String> row = it.next();
                 String code = row.get("code");
                 
-                if (placeRepository.findByCode(code).isPresent()) {
-                    continue; // Skip if already exists
+                Optional<Place> existingPlaceOpt = placeRepository.findByCode(code);
+                if (existingPlaceOpt.isPresent()) {
+                    Place existingPlace = existingPlaceOpt.get();
+                    String csvImageUrl = row.get("imageUrl");
+                    if (csvImageUrl != null && !csvImageUrl.equals(existingPlace.getImageUrl())) {
+                        existingPlace.updateImageUrl(csvImageUrl);
+                        log.info("Updated imageUrl for existing place: {}", code);
+                    }
+                    continue; // Skip if already exists but check for field updates
                 }
 
                 Place place = Place.builder()
