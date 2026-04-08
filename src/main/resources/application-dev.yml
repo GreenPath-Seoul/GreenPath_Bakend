@@ -73,5 +73,6 @@ cors:
 
 # ── OpenAI 설정 ────────────────────────────────────────────────
 openai:
+  mock: true
   api-key: ${OPENAI_API_KEY:your_api_key_here}
   embedding-model: text-embedding-3-small
