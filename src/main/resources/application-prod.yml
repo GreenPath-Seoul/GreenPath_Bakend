@@ -74,6 +74,10 @@ openai:
   api-key: ${OPENAI_API_KEY}
   embedding-model: text-embedding-3-small
 
+# ── 기상청 API 설정 ─────────────────────────────────────────────
+kma:
+  service-key: ${KMA_SERVICE_KEY}
+
 logging:
   level:
     root: INFO
