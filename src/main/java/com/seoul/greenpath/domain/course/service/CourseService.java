@@ -384,7 +384,9 @@ public class CourseService {
                                 place.getDescription(),
                                 place.getLatitude(),
                                 place.getLongitude(),
-                                place.getImageUrl());
+                                place.getImageUrl(),
+                                stop.getDistanceFromPrev(),
+                                stop.getDurationFromPrev());
         }
 
         private CourseResponse fromEntity(Course course) {
@@ -398,7 +400,9 @@ public class CourseService {
                                                 stop.getStayMinutes(),
                                                 stop.getPlace().getLatitude(),
                                                 stop.getPlace().getLongitude(),
-                                                stop.getPlace().getImageUrl()))
+                                                stop.getPlace().getImageUrl(),
+                                                stop.getDistanceFromPrev(),
+                                                stop.getDurationFromPrev()))
                                 .collect(Collectors.toList());
 
                 return new CourseResponse(

@@ -30,6 +30,8 @@ public record CourseResponse(
         Integer stayMinutes,
         Double latitude,
         Double longitude,
-        String imageUrl
+        String imageUrl,
+        Double distanceFromPrev,
+        Double durationFromPrev
     ) {}
 }

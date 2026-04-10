@@ -6,7 +6,7 @@ spring:
     password: Ckddlfdl1!
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: false
     properties:
       hibernate:

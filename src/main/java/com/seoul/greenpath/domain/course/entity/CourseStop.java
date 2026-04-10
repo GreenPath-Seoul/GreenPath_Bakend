@@ -8,6 +8,7 @@ import lombok.*;
  */
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -29,6 +30,8 @@ public class CourseStop {
 
     private Integer stopOrder;     // 순서 (1,2,3)
     private Integer stayMinutes;   // 체류 시간
+    private Double distanceFromPrev; // 이전 장소와의 거리 (km)
+    private Double durationFromPrev; // 이전 장소까지의 예상 소요 시간 (분)
 
     // ── 연관관계 편의용 ─────────────────────────────────────────
     public void setCourse(Course course) {

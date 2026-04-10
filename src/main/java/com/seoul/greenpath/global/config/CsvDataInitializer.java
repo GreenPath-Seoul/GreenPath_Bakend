@@ -172,9 +172,21 @@ public class CsvDataInitializer {
                 String courseCode = row.get("CourseCode");
                 String placeCode = row.get("PlaceCode");
                 int stopOrder = parseSafeInt(row.get("stopOrder"));
+                int stayMinutes = parseSafeInt(row.get("stayMinutes"));
+                
+                String distStr = row.get("distance_from_prev");
+                Double distanceFromPrev = (distStr == null || distStr.trim().isEmpty()) ? null : parseSafeDouble(distStr);
+                
+                String durStr = row.get("duration_from_prev");
+                Double durationFromPrev = (durStr == null || durStr.trim().isEmpty()) ? null : parseSafeDouble(durStr);
 
-                // Course와 stopOrder로 중복 체크
-                if (courseStopRepository.existsByCourseCodeAndStopOrder(courseCode, stopOrder)) {
+                Optional<CourseStop> existingStopOpt = courseStopRepository.findByCourseCodeAndStopOrder(courseCode, stopOrder);
+                
+                if (existingStopOpt.isPresent()) {
+                    CourseStop existingStop = existingStopOpt.get();
+                    existingStop.setStayMinutes(stayMinutes);
+                    existingStop.setDistanceFromPrev(distanceFromPrev);
+                    existingStop.setDurationFromPrev(durationFromPrev);
                     continue;
                 }
                 
@@ -188,7 +200,9 @@ public class CsvDataInitializer {
                         .course(course)
                         .place(place)
                         .stopOrder(stopOrder)
-                        .stayMinutes(parseSafeInt(row.get("stayMinutes")))
+                        .stayMinutes(stayMinutes)
+                        .distanceFromPrev(distanceFromPrev)
+                        .durationFromPrev(durationFromPrev)
                         .build();
                 
                 courseStopRepository.save(stop);

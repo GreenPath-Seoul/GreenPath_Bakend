@@ -13,5 +13,7 @@ public record CourseExploreResponse(
     String description,
     Double latitude,
     Double longitude,
-    String imageUrl
+    String imageUrl,
+    Double distanceFromPrev,
+    Double durationFromPrev
 ) {}
