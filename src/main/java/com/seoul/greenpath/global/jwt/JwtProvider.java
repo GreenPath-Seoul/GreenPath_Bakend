@@ -16,7 +16,7 @@ import java.util.Date;
  * JWT 토큰 생성 / 검증 / 파싱 전담 컴포넌트
  *
  * Access  Token : 짧은 수명 (기본 30분)  → Authorization 헤더로 전달
- * Refresh Token : 긴 수명   (기본 14일)  → DB + HttpOnly Cookie 또는 Body로 전달
+ * Refresh Token : 긴 수명   (기본 14일)  → Redis + HttpOnly Cookie 또는 Body로 전달
  */
 @Slf4j
 @Component
