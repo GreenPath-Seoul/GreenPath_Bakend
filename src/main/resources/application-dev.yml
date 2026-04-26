@@ -11,6 +11,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   # ── OAuth2 소셜 로그인 설정 ──────────────────────────────────
   security:

@@ -137,12 +137,21 @@ public class AuthService {
         // 4. 새 토큰 발급 + Refresh Token Rotation
         String newAccessToken  = jwtProvider.createAccessToken(memberId, member.getRole().getKey());
         String newRefreshToken = jwtProvider.createRefreshToken(memberId);
+        Long ttl = jwtProvider.getRefreshTokenValiditySeconds();
 
-        savedToken.rotate(
-                newRefreshToken,
-                LocalDateTime.now().plusSeconds(jwtProvider.getRefreshTokenValiditySeconds()),
-                clientIp
-        );
+        // Redis에서는 ID(token)가 변경되면 새 엔티티가 되므로 기존 것을 삭제하고 새로 저장
+        refreshTokenRepository.delete(savedToken);
+        
+        RefreshToken newToken = RefreshToken.builder()
+                .memberId(memberId)
+                .token(newRefreshToken)
+                .expiresAt(LocalDateTime.now().plusSeconds(ttl))
+                .lastUsedIp(clientIp)
+                .createdAt(LocalDateTime.now())
+                .ttl(ttl)
+                .build();
+        
+        refreshTokenRepository.save(newToken);
 
         log.debug("[Token Reissued] memberId={}", memberId);
         return TokenResponse.of(newAccessToken, newRefreshToken, jwtProvider.getAccessTokenValiditySeconds());
@@ -165,18 +174,19 @@ public class AuthService {
         LocalDateTime expiresAt = LocalDateTime.now()
                 .plusSeconds(jwtProvider.getRefreshTokenValiditySeconds());
 
-        // Refresh Token 저장 (기존 토큰 있으면 교체)
+        // Refresh Token 저장 (기존 토큰 있으면 삭제 후 교체)
         refreshTokenRepository.findByMemberId(member.getId())
-                .ifPresentOrElse(
-                        existing -> existing.rotate(refreshToken, expiresAt, null),
-                        () -> refreshTokenRepository.save(
-                                RefreshToken.builder()
-                                        .memberId(member.getId())
-                                        .token(refreshToken)
-                                        .expiresAt(expiresAt)
-                                        .build()
-                        )
-                );
+                .ifPresent(refreshTokenRepository::delete);
+
+        refreshTokenRepository.save(
+                RefreshToken.builder()
+                        .memberId(member.getId())
+                        .token(refreshToken)
+                        .expiresAt(expiresAt)
+                        .createdAt(LocalDateTime.now())
+                        .ttl(jwtProvider.getRefreshTokenValiditySeconds())
+                        .build()
+        );
 
         return TokenResponse.of(accessToken, refreshToken, jwtProvider.getAccessTokenValiditySeconds());
     }
