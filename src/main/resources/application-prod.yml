@@ -19,7 +19,7 @@ spring:
         format_sql: false
   data:
     redis:
-      host: ${REDIS_HOST:54.252.35.45}
+      host: ${REDIS_HOST:172.31.23.93}
       port: ${REDIS_PORT:6379}
 
   # ── OAuth2 소셜 로그인 설정 ──────────────────────────────────
