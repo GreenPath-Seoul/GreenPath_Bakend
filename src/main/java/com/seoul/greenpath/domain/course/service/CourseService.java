@@ -19,6 +19,7 @@ import com.seoul.greenpath.domain.member.service.RewardService;
 import com.seoul.greenpath.global.exception.CustomException;
 import com.seoul.greenpath.global.exception.ErrorCode;
 import com.seoul.greenpath.global.openai.OpenAiService;
+import com.seoul.greenpath.global.claude.ClaudeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,74 +48,77 @@ public class CourseService {
         private final MemberPreferenceRepository memberPreferenceRepository;
         private final RewardService rewardService;
         private final OpenAiService openAiService;
+        private final ClaudeService claudeService;
 
         /**
          * AI 분석 기반 코스를 추천하고 이를 데이터베이스에 저장합니다.
          */
-        /**
-         * 사용자의 선호 옵션 및 현재 위치를 기반으로 코스를 추천하고, 이번 요청의 조건을 사용자의 기본 선호도로 저장합니다.
-         */
         @Transactional
         public List<CourseResponse> getRecommendCourses(Long memberId, CourseRequest request) {
-                log.info("[CourseService] 맞춤 코스 추천 및 선호도 업데이트 시작 - Member: {}", memberId);
+                log.info("[CourseService] 맞춤 코스 추천 시작 (Hybrid RAG) - Member: {}", memberId);
 
                 MemberPreference preference = updateMemberPreference(memberId, request);
 
                 List<Course> allCourses = courseRepository.findAll();
-                if (allCourses.isEmpty())
-                        return new ArrayList<>();
+                if (allCourses.isEmpty()) return new ArrayList<>();
 
-                // 탐방 완료된 코스 ID 목록 조회 및 필터링
+                // 1. 후보군 필터링 (명시적 조건 및 기탐방 제외)
                 Set<Long> completedIds = exploreRecordRepository.findCompletedCourseIdsByMemberId(memberId);
-                log.info("[CourseService] 제외할 탐방 완료 코스 수 - Count: {}", completedIds.size());
-
                 List<Course> availableCourses = allCourses.stream()
                                 .filter(course -> !completedIds.contains(course.getId()))
                                 .collect(Collectors.toList());
 
-                if (availableCourses.isEmpty()) {
-                        log.warn("[CourseService] 모든 코스를 탐방하여 새 추천이 불가능함. 기존 전체 코스 사용");
-                        availableCourses = allCourses; // 모든 코스를 마친 경우 전체에서 다시 추천
-                }
+                if (availableCourses.isEmpty()) availableCourses = allCourses;
 
-                // 1. 점수 계산 및 거리 계산
+                // 2. 점수 계산 및 1차 Top 10 후보 선정 (가중치 필터링 + 임베딩 유사도)
                 List<ScoredCourse> scoredCourses = availableCourses.stream()
                                 .map(course -> {
                                         double score = calculateScore(course, request, preference);
                                         double distance = calculateDistanceToFirstStop(course,
-                                                        (request != null && request.latitude() != null)
-                                                                        ? request.latitude()
-                                                                        : (preference != null ? preference.getLatitude()
-                                                                                        : null),
-                                                        (request != null && request.longitude() != null)
-                                                                        ? request.longitude()
-                                                                        : (preference != null
-                                                                                        ? preference.getLongitude()
-                                                                                        : null));
+                                                        (request != null && request.latitude() != null) ? request.latitude() : (preference != null ? preference.getLatitude() : null),
+                                                        (request != null && request.longitude() != null) ? request.longitude() : (preference != null ? preference.getLongitude() : null));
                                         return new ScoredCourse(course, score, distance);
                                 })
-                                .collect(Collectors.toList());
-
-                // 2. 위치 기반 필터링 (10km 이내)
-                List<ScoredCourse> nearbyCourses = scoredCourses.stream()
-                                .filter(sc -> sc.distance <= 10.0)
+                                .filter(sc -> sc.distance <= 20.0) // 거리 제한 완화 (후보 확보를 위해)
                                 .sorted((a, b) -> Double.compare(b.score, a.score))
+                                .limit(10) // Top 10 선정
                                 .collect(Collectors.toList());
 
-                List<ScoredCourse> finalSelection;
-                if (!nearbyCourses.isEmpty()) {
-                        finalSelection = nearbyCourses;
-                } else {
-                        // 10km 이내에 없으면 전체에서 점수 높은 순
-                        finalSelection = scoredCourses.stream()
-                                        .sorted((a, b) -> Double.compare(b.score, a.score))
-                                        .collect(Collectors.toList());
+                if (scoredCourses.isEmpty()) {
+                        return scoredCourses.stream().limit(3).map(sc -> fromEntity(sc.course)).collect(Collectors.toList());
                 }
 
-                // 3. 상위 3개 반환
-                return finalSelection.stream()
+                // 3. LLM 재랭킹 (Claude) - 최종 Top 3 선정 및 사유 생성
+                String userPreferenceText = (request != null && request.preferenceText() != null) 
+                                ? request.preferenceText() 
+                                : (preference != null ? preference.getPreferenceText() : "서울의 아름다운 산책길을 추천해주세요.");
+
+                List<ClaudeService.CourseInfo> candidateInfos = scoredCourses.stream()
+                                .map(sc -> ClaudeService.CourseInfo.builder()
+                                                .id(sc.course.getId())
+                                                .title(sc.course.getTitle())
+                                                .description(sc.course.getDescription())
+                                                .build())
+                                .collect(Collectors.toList());
+
+                List<ClaudeService.ReRankingResult> reRankedResults = 
+                                claudeService.reRankCourses(userPreferenceText, candidateInfos);
+
+                // 재랭킹 결과 매핑 및 반환
+                if (reRankedResults.isEmpty()) {
+                        return scoredCourses.stream().limit(3).map(sc -> fromEntity(sc.course)).collect(Collectors.toList());
+                }
+
+                return reRankedResults.stream()
                                 .limit(3)
-                                .map(sc -> fromEntity(sc.course))
+                                .map(result -> {
+                                        Course course = scoredCourses.stream()
+                                                        .filter(sc -> sc.course.getId().equals(result.getId()))
+                                                        .map(sc -> sc.course)
+                                                        .findFirst()
+                                                        .orElse(scoredCourses.get(0).course);
+                                        return fromEntity(course, result.getReason());
+                                })
                                 .collect(Collectors.toList());
         }
 
@@ -388,6 +392,10 @@ public class CourseService {
         }
 
         private CourseResponse fromEntity(Course course) {
+                return fromEntity(course, null);
+        }
+
+        private CourseResponse fromEntity(Course course, String recommendReason) {
                 List<CourseResponse.CourseStop> stopDtos = course.getStops().stream()
                                 .map(stop -> new CourseResponse.CourseStop(
                                                 stop.getCode(),
@@ -413,7 +421,8 @@ public class CourseService {
                                                 course.getCarbonReductionKg()),
                                 stopDtos,
                                 course.getPolyline(),
-                                course.getCreatedAt());
+                                course.getCreatedAt(),
+                                recommendReason);
         }
     /**
      * C0001 ~ C0010 중 랜덤으로 3개의 코스를 반환합니다.

@@ -2,6 +2,7 @@ package com.seoul.greenpath.domain.weather.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.seoul.greenpath.domain.weather.client.WeatherApiClient;
 import com.seoul.greenpath.domain.weather.dto.WeatherResponse;
 import com.seoul.greenpath.domain.weather.entity.Weather;
 import com.seoul.greenpath.domain.weather.repository.WeatherRepository;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter;
 public class WeatherService {
 
     private final WeatherRepository weatherRepository;
-    private final RestTemplate restTemplate;
+    private final WeatherApiClient weatherApiClient;
     private final ObjectMapper objectMapper;
 
     @Value("${kma.service-key}")
@@ -79,9 +79,13 @@ public class WeatherService {
                     .toUri();
 
             log.info("[WeatherService] 기상청 공공데이터 API 요청 URI: {}", uri);
-            String response = restTemplate.getForObject(uri, String.class);
+            String response = weatherApiClient.fetchWeather(uri);
 
-            if (response == null || response.contains("<returnAuthMsg>")) {
+            if (response == null || response.contains("<returnAuthMsg>") || response.equals("FALLBACK")) {
+                if ("FALLBACK".equals(response)) {
+                    log.warn("[WeatherService] Circuit Breaker 활성 상태 또는 호출 실패로 인해 Fallback 데이터(이전 데이터 유지)를 사용합니다.");
+                    return;
+                }
                 log.error("[WeatherService] 기상청 공공데이터 API 인증 실패 또는 오류: {}", response);
                 return;
             }
