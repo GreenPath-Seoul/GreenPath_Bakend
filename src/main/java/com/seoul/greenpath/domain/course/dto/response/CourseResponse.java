@@ -12,7 +12,8 @@ public record CourseResponse(
     CourseSummary summary,
     List<CourseStop> stops,
     String polyline,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    String recommendReason
 ) {
     public record CourseSummary(
         Double distanceKm,

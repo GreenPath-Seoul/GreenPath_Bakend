@@ -74,8 +74,14 @@ cors:
 # ── OpenAI 설정 ────────────────────────────────────────────────
 openai:
   mock: true
-  api-key: ${OPENAI_API_KEY:your_api_key_here}
+  api-key: ${OPENAI_API_KEY:mock}
   embedding-model: text-embedding-3-small
+
+# ── Anthropic (Claude) 설정 ────────────────────────────────────
+anthropic:
+  mock: true
+  api-key: ${ANTHROPIC_API_KEY:mock}
+  model: claude-3-5-sonnet-20240620
 
 # ── 기상청 API 설정 ─────────────────────────────────────────────
 kma:
